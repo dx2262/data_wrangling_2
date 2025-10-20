@@ -1,0 +1,161 @@
+---
+title: "Reading Data From the Web"
+output: github_document
+---
+
+Load essential packages.
+```{r}
+library(tidyverse)
+library(readxl)
+library(patchwork)
+library(p8105.datasets)
+library(viridis)
+library(lubridate)
+```
+
+```{r}
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+Load key packages.
+```{r}
+library(rvest)
+library(httr)
+```
+
+
+## Scraping
+
+Import NSDUH data from the web
+
+```{r}
+url = "http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm"
+
+drug_use_html <- read_html(url)
+```
+
+This is an "easy" case.
+
+pull out every table
+```{r}
+drug_use_html %>% 
+  html_table()
+```
+
+pull out the 1st table
+```{r}
+nsduh_df <- 
+  drug_use_html %>% 
+  html_table() %>% 
+  first() %>% 
+  slice(-1) #get rid of 1st row
+```
+
+pull out the nth table
+```{r}
+drug_use_html %>% 
+  html_table() %>%
+  nth(7)
+```
+
+
+Slightly harder case
+
+```{r}
+url = "https://www.imdb.com/list/ls070150896/"
+
+sw_html <- 
+  read_html(url)
+```
+
+now pull out the elements in the webpage that we care about.
+
+```{r}
+title_vec <- 
+  sw_html %>% 
+  html_elements(".ipc-title-link-wrapper .ipc-title__text--reduced") %>% 
+  html_text()
+```
+
+```{r}
+metascore_vec <- 
+  sw_html %>% 
+  html_elements(".metacritic-score-box") %>% 
+  html_text()
+```
+
+```{r}
+runtime_vec <- 
+  sw_html %>% 
+  html_elements(".dli-title-metadata-item:nth-child(2)") %>% 
+  html_text()
+```
+
+```{r}
+sw_df <- 
+  tibble(
+    title = title_vec,
+    metascore = metascore_vec,
+    runtime = runtime_vec
+  )
+```
+
+
+## APIs
+
+Get data using an API.
+
+Get the NYC water consumption dataset.
+
+```{r}
+nyc_water_df <- 
+  GET("https://data.cityofnewyork.us/resource/ia2d-e54m.csv") %>% 
+  content("parsed")
+
+nyc_water_df %>% 
+  ggplot(aes(x = year, y = nyc_consumption_million_gallons_per_day)) +
+  geom_point()
+
+```
+
+Access BRFSS
+
+```{r, eval=FALSE}
+brfss_df <- 
+  GET("https://chronicdata.cdc.gov/resource/acme-vg9e.csv")
+```
+
+
+Look at Pokemon data
+
+```{r}
+poke = 
+  GET("http://pokeapi.co/api/v2/pokemon/1") |>
+  content()
+```
+
+
+
+
+
+
+
+
+
+
+
+
