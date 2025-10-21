@@ -387,6 +387,51 @@ nsduh_df <-
   slice(-1) #get rid of 1st row
 ```
 
+now do the tidying…
+
+``` r
+marj_df <- 
+  nsduh_df %>% 
+  select(-contains("P Value")) %>% 
+  pivot_longer(
+    -State,
+    names_to = "age_year",
+    values_to = "percent"
+  ) %>% 
+  separate(age_year, into = c("age", "year"), sep = "\\(") %>% 
+  mutate(
+    year = str_remove(year, "\\)"),
+    percent = str_remove(percent, "[a-c]$"),
+    percent = as.numeric(percent)
+  ) %>% 
+  filter(
+    !(State %in% c("Total U.S.", "Northeast", "Midwest", "South", "West"))
+  )
+```
+
+Let’s make a quick plot
+
+``` r
+marj_df %>% 
+  filter(age == "12-17") %>% 
+  ggplot(aes(x = State, y = percent, color = year)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+<img src="Reading-Data-From-the-Web_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+
+``` r
+marj_df %>% 
+  filter(age == "12-17") %>% 
+  mutate(State = fct_reorder(State, percent)) %>% 
+  ggplot(aes(x = State, y = percent, color = year)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+<img src="Reading-Data-From-the-Web_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
+
 pull out the nth table
 
 ``` r
@@ -480,7 +525,7 @@ nyc_water_df %>%
   geom_point()
 ```
 
-<img src="Reading-Data-From-the-Web_files/figure-gfm/unnamed-chunk-13-1.png" width="90%" />
+<img src="Reading-Data-From-the-Web_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
 
 Access BRFSS
 
